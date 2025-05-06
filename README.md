@@ -1,346 +1,106 @@
-# Create a new Protocol
+# Protocol: Football Scores Prediction
 
-Forest Network consists of a multitude of Protocols that are incentivized to accelerate digital innovation and prove their worth to the users by building in-demand services. Every digital service can become a Protocol within Forest Network. The diversity of Protocols together with Network's inherent interoperability is what adds up to its strength.
+## Description
 
-The Network is permissionless and everyone is allowed to create a new Protocol.
+This protocol enables providers to offer football match score prediction services. Providers can predict outcomes of upcoming football fixtures across various leagues, with predictions made at different time intervals before the match (`T7D`, `T36H`, `T12H`, `T1H`, `T1M`). The protocol supports `1X2` market predictions (Home Win/Draw/Away Win).
 
-This repository contains instructions and code templates for innovators who want to create their own Protocols, grow them and earn passive income. What is required of a potential Protocol Owner is to:
+## Basic Info
 
-1. [Registering in the Network](#1-registering-in-the-network),
-   - [Register as a Protocol Owner](#11-register-as-a-protocol-owner),
-   - [Register a New Protocol](#12-register-a-new-protocol),
-2. [Fork and edit the repository](#2-fork-and-edit-the-repository),
-3. [Prepare the README file for Users and Providers](#3-prepare-the-readme-file-for-users-and-providers).
-4. [Grow Your Protocol by Onboarding Providers, Validators and Users](#4-grow-your-protocol).
+| Name                      | Value                      |
+| ------------------------- | -------------------------- |
+| PT Smart Contract Address | `{Smart Contract Address}` |
+| PT Registration Date      | `{Date of registration}`   |
+| PT Details File CID       | `{CID}`                    |
+| PT Owner Wallet Address   | `{Public Wallet Address}`  |
+| PT Owner Details File CID | `{CID}`                    |
 
-## Quickstart
+## Supported Actions (Endpoints)
 
-As a Protocol Owner you want to make life easy for Providers that will be adding offers to your Protocol and servicing clients. That's why you need to create a Provider Template that each Provider will be running to deliver to its clients. We have already implemented all of the Network level functionality. The only thing you need to do is to define the Protocol specific code.
+| Method-Path                | Params/Body                                                                 | Response                                                                 | Description                                                                                                                           |
+| ------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /details`            | `body: string[]`                                                           | `string[]`                                                               | Retrieves the contents of detail files for the given CIDs. If one CID is given and corresponding file is not found, returns 404/Not Found. Otherwise returns an array of contents of the files |
+| `GET /resources`          | `params: { id?: number, pt?: Address }`                                    | `Resource[] \| Resource`                                                 | If `id` and `pt` is given, retrieves one resource information. Otherwise returns all resources of the requester                      |
+| `GET /predict-fixture-results` | `body: { id: number, pt: Address, challenges: string[] }`              | `{ predictions: string[], responseCode: "OK" \| "ERROR" }`              | Predicts the results of upcoming football fixtures. Each challenge in the array must be a valid JSON string containing match details |
 
-### 1. Registering in the Network
+### Challenge Object Structure
 
-At first, you need to register yourself as a Protocol Owner and register your Protocol in the Network.
-
-#### 1.1 Register as a Protocol Owner
-
-All Actors such as Protocol Owners, Providers and Validators need to register in the Network and pay the registration fee before they can start any type of interactions.
-
-**TESTNET NOTE**: if you need testnet tokens reach out to the Forest Network team on [Discord](https://discord.gg/HWm96wKzWV).
-
-1. Create a JSON details file in the following schema and save it somewhere:
+Each challenge in the `challenges` array must be a JSON string with the following structure:
 
 ```json
 {
-  "name": "<Protocol Owner Name that will be visible to users>",
-  "description": "<[Optional] Description>",
-  "homepage": "<[Optional] Homepage address>"
+  "challengeId": "9c365ad3-5280-4093-bb83-e492dceee6b6",
+  "homeTeam": "Hearts",
+  "awayTeam": "Motherwell",
+  "venue": "Tynecastle Park",
+  "league": "Premiership",
+  "fixtureId": "19415354",
+  "kickoffTime": "2025-05-10T16:00:00+02:00",
+  "phaseIdentifier": "T7D",
+  "targetMarket": "1X2",
+  "difficulty": 142,
+  "deadline": "2025-05-06T18:07:36.560+02:00"
 }
 ```
 
-2. Create a set of pub / priv keys using an EVM-compatible wallet.
-3. Take that account's private key and save it to a file.
-4. Put the JSON file and that private key file into the same folder.
-5. Open up a terminal in that folder.
-   > If you are planning to use different accounts for billing and operating, you need to pass additional flags: `--billing <address>` and `--operator <address>`. This separation increases security of your configuration. Setting a billing address allows for having a separate address / identity for claiming your earnings and rewards while setting an operator allows you to delegate the operational work of running a daemon and servicing user requests to a third-party or a hotkey. If you don't need that, just skip those flags and the logic of the Protocol will use your main address as your billing and operator address.
-6. Run the following command:
-   ```sh
-    forest register pto \
-        --details <JSON file name - (Detailed information about the Actor)> \
-        --account <Private key of the caller's wallet>
+## Configuration Parameters
+
+This Protocol has the following configuration. Some of them are enforced by the logic of the on-chain smart contracts and the others are part of the Validator code hence enforced by the Validator consensus.
+
+| Config                                   | Value                      | Enforced by    |
+| ---------------------------------------- | -------------------------- | -------------- |
+| Maximum Number of Validators             | `1`                 | Smart Contract |
+| Maximum Number of Providers              | `1`                 | Smart Contract |
+| Minimum Collateral                       | `100` | Smart Contract |
+| Validator Registration Fee               | `100` | Smart Contract |
+| Provider Registration Fee                | `50` | Smart Contract |
+| Offer Registration Fee                   | `50` | Smart Contract |
+| Update Delay for Terms Change            | `1000`            | Smart Contract |
+| Validators Share of Emissions            | `20%`            | Smart Contract |
+| Providers Share of Emissions             | `50%`            | Smart Contract |
+| PT Owner Share of Emissions              | `30%`            | Smart Contract |
+| CID of the Details File                  | `{CID}`                    | Smart Contract |
+
+You can always double-check the on-chain values e.g. [here](https://sepolia-optimism.etherscan.io/address/`{Smart Contract Address}`#readContract)
+
+## Performance Requirements
+
+The Validators are performing a number of tests on Resources to ensure quality across the board. Below is a list of checked Benchmarks:
+
+| Name                    | Units     | Threshold Value | Min / Max     |
+| ----------------------- | --------- | --------------- | ------------- |
+| Prediction Score        | Points    | 51             | Min           |
+| Response Time          | ms        | 12000           | Max           |
+| Availability          | %         | 99.9%          | Min           |
+
+More in-depth descriptions of the Tests:
+
+| Name              | Description                                                                 |
+| ----------------- | --------------------------------------------------------------------------- |
+| Prediction Score  | Providers must submit probability distributions (p.h, p.d, p.a) for each match outcome. The Ranked Probability Score (RPS) is calculated by comparing these probabilities against the actual outcome (home/draw/away). The final score is calculated as `Math.round((1 - rps) * 100)`, resulting in a score between 0 and 100. |
+| Response Time     | Maximum allowed time to generate predictions for a batch of fixtures. Must be under 12 seconds to ensure timely predictions. |
+| Availability      | Service uptime requirement. Providers must maintain 99.9% availability to ensure reliable prediction service. |
+
+### Scoring System Details
+
+The prediction scoring system uses the Ranked Probability Score (RPS) formula to evaluate the quality of probability predictions:
+
+1. For each match, providers submit three probabilities:
+   - p.h: Probability of home win
+   - p.d: Probability of draw
+   - p.a: Probability of away win
+
+2. The actual outcome is recorded as:
+   - o: "home", "draw", or "away"
+
+3. The RPS is calculated and then transformed into a final score:
+   ```javascript
+   finalScore = Math.round((1 - rps) * 100)
    ```
-7. Later you will need to copy your JSON details file into `data/details/[filename]` path of the Provider Base Template repo you will fork and clone, so remember where you have this file. The `[filename]` doesn't matter, choose whatever you like.
 
-#### 1.2 Register a New Protocol
+4. This results in a score between 0 and 100, where:
+   - Higher scores indicate better predictions
+   - A perfect prediction would score 100
+   - A completely incorrect prediction would score 0
+## Become a Provider in this Protocol
 
-Each Protocol is a separate smart contract that is deployed by the Registry main protocol contract. To deploy a new Protocol, first you need to create a file containing detailed information about it. You have two options to do this:
-
-##### **Option 1:** Human-Readable Format
-
-You can create a plain text, Markdown, or any other format with human-readable content, such as the example below:
-
-```
-# Blueprint to 3D Model (Sketch to 3D)
-
-## Goal
-
-This subnet aims to convert blueprints, hand-drawn sketches, or simple CAD drawings into detailed 3D models. The goal is to enable quick visualization of architectural, product, or mechanical designs.
-
-## Evaluation
-
-Responses will be evaluated based on:
-
-✅ Structural Accuracy: The 3D model should correctly represent the original sketch.
-✅ Rendering Quality: The model should be free of graphical artifacts.
-✅ Material & Texture Fidelity: If provided, material properties should be correctly applied.
-........
-```
-
-##### **Option 2:** Structured JSON
-
-Alternatively, you can create a JSON file following the type definitions below. With this approach, the details of this Protocol will be visible in the CLI and Marketplace. Additionally, all Offers registered by Providers in this Protocol must set all the parameters defined in the JSON file.
-
-> These are pseudo-type definitions to illustrate the JSON schema.
-
-```typescript
-type ProtocolDetails = {
-  /* Descriptive name of the Protocol */
-  name: string;
-
-  /* The tests will be doing by the Validators */
-  tests: any[];
-
-  /* Software/Type of the Protocol such as "Database", "VM" or "API Service" etc. */
-  softwareStack?: string;
-
-  /* Version of the Service that is going to be served in this Protocol */
-  version?: string;
-
-  /* The parameters that each Offer which registered in this Protocol has to include */
-  offerParams: {
-    /* Visible name of the parameter */
-    name: string;
-
-    /*
-     * For numeric values, it is a string which specifies
-     * the unit of that number, otherwise possible
-     * values for the field.
-     */
-    unit: string | string[];
-
-    /* Priority of the Offer param in the Marketplace filter list */
-    priority?: number;
-
-    /* Defines is this Offer param can be filterable in Marketplace */
-    isFilterable?: boolean;
-
-    /* Defines is this Offer param is a primary info or not */
-    isPrimary?: boolean;
-  }[];
-};
-```
-
-An example JSON file based on these type definitions:
-
-```json
-{
-  "name": "PostgreSQL",
-  "softwareStack": "Database",
-  "tests": [],
-  "offerParams": [
-    {
-      "name": "CPU",
-      "unit": "Cores",
-      "priority": 100,
-      "isPrimary": true
-    },
-    {
-      "name": "RAM",
-      "unit": "GB",
-      "priority": 90,
-      "isPrimary": true
-    },
-    {
-      "name": "Disk Type",
-      "unit": ["SSD", "HDD", "M2"],
-      "priority": 80,
-      "isPrimary": true
-    },
-    {
-      "name": "Disk Size",
-      "unit": "GB",
-      "priority": 70
-    },
-    {
-      "name": "Virtualization",
-      "unit": ["VM", "Container"],
-      "priority": 60
-    },
-    {
-      "name": "CPU Architecture",
-      "unit": ["x86", "ARM"]
-    },
-    {
-      "name": "Isolation",
-      "unit": ["Shared", "Dedicated"],
-      "isFilterable": false,
-      "priority": 40
-    }
-  ]
-}
-```
-
-2. Later you will need to copy your JSON details file into `data/details/[file name]` path of the Provider Base Template repo you will fork and clone, so remember where you have this file. the `[file name]` doesn't matter, choose whathever you like.
-
-```sh
-forest protocol create \
-  --details <details file path> \
-  --account <private key file path OR private key itself of the PTO account> \
-  --max-validator 10 \
-  --max-provider 10 \
-  --min-collateral 10 \
-  --validator-register-fee 5 \
-  --provider-register-fee 3 \
-  --offer-register-fee 2 \
-  --term-update-delay 400 \
-  --provider-share 45 \
-  --validator-share 45 \
-  --pto-share 10
-```
-
-#### Explanation of Command Flags
-
-| Flag                       | Description                                                  |
-| -------------------------- | ------------------------------------------------------------ |
-| `--max-validator`          | Maximum number of Validators that can be registered.         |
-| `--max-provider`           | Maximum number of Providers that can be registered.          |
-| `--min-collateral`         | Minimum FOREST token collateral required for a registration. |
-| `--validator-register-fee` | Registration fee (FOREST token) for Validators.              |
-| `--provider-register-fee`  | Registration fee (FOREST token) for Providers.               |
-| `--offer-register-fee`     | Fee for Providers to register a new Offer.                   |
-| `--term-update-delay`      | Minimum block count before Providers can close agreements.   |
-| `--provider-share`         | Percentage of emissions allocated to Providers.              |
-| `--validator-share`        | Percentage of emissions allocated to Validators.             |
-| `--pto-share`              | Percentage of emissions allocated to the Protocol Owner.     |
-
-### 2. Fork and edit the repository
-
-Fork this repository and clone it locally. Open the `src/protocol/base-provider.ts` file. The first step is to define the details each "Resource" will have.
-
-Resources are entities that are created in consequence of on-chain "AgreementCreated" events being emitted by the smartcontracts. While Agreements live on-chain, Resources are kept as records in the daemon database and have a 1-1 relationship with Agreements.
-
-At the beginning of the file, you'll see a type definition named `ExampleResourceDetails`, which specifies the attributes stored in the daemon's database for each Resource in this Protocol. Details of a Resource are most likely the data that would be useful for the Users to see or the configuration that has to be used internally in order to handle the Resource. They can be accessible by Users unless you prefix the detail name with `_`. For instance, these details might include connection strings for a Database Resource or endpoints and API keys for an API service Resource.
-
-Rename the type to match your service and edit the fields accordingly. An example type definition for the SQLite Protocol is shown below:
-
-```typescript
-export type SQLiteDatabaseResourceDetails = ResourceDetails & {
-  // Fields should use PascalCase with underscores for spaces
-  Size_MB: number; // Database file size in MB
-
-  // Fields starting with an underscore are for internal use only and won't be seen by the Users.
-  _fileName: string; // SQLite database file name
-};
-```
-
-Once you have defined the details type, update the `BaseExampleServiceProvider` abstract class to define this protocol's supported methods / functionality. This is a set of actions that Users can request your Providers to complete if they have an active Agreement for a service in your PT. All Providers within this Protocol must implement all functions you define in this class. Rename the class to reflect your service. For example:
-
-```typescript
-export abstract class BaseSQLiteDatabaseServiceProvider extends AbstractServiceProvider<SQLiteDatabaseResourceDetails> {
-  /**
-   * Defines the services's functionality. All functions below
-   * must be implemented by Providers in this Protocol.
-   */
-
-  /**
-   * Executes the given SQL query on the database.
-   *
-   * @param resource Resource information stored in the database.
-   * @param query SQL query to execute.
-   */
-  abstract sqlQuery(resource: Resource, query: string): Promise<any[]>;
-}
-```
-
-After defining your service's functionalities (e.g., `sqlQuery`), you need to create "Pipe" endpoints to allow Users to invoke these functions.
-
-> "**_Pipe_**" is a simple abstraction layer for HTTP-like request-response communication between participants. The current Pipe implementation is built on [XMTP](https://xmtp.org/) for fully decentralized communication within the Protocol.
-
-Define these endpoints in the `init()` method. For example:
-
-```typescript
-async init(providerTag: string) {
-    // Call the base class' `init` function
-    await super.init(providerTag);
-
-    // TODO: Implement your Pipe endpoints
-
-    /**
-     * @param 1:
-     *  Pipe endpoints can be defined for different methods such as POST, PUT, DELETE, etc.
-     *  You can follow the traditional REST pattern to determine which method to use.
-     * @param 2:
-     *  Path of the endpoint. Clients/users send their requests to this endpoint
-     *  to invoke the `sqlQuery` method.
-     * @param 3:
-     *  Actual handler function that processes the request.
-     */
-    this.route(PipeMethod.GET, "/query", async (req) => {
-        /**
-         * In route handler functions, all errors are automatically handled
-         * with an "Internal server error" response. If the thrown error
-         * is an instance of `PipeError`, the response will use values provided
-         * by this error.
-         */
-
-        /**
-         * Parameters can be extracted from `req.body` or `req.params`.
-         * Here, we use `req.body`.
-         *
-         * We validate the body params using [Zod](https://zod.dev/)
-         * to ensure they conform to the expected schema.
-         */
-        const body = validateBodyOrParams(req.body, z.object({
-            id: z.number(), // Resource ID
-            pt: addressSchema, // Protocol address
-            query: z.string(), // SQL query
-        }));
-
-        /**
-         * Retrieve the resource from the daemon's database using `getResource`.
-         * If the resource is not found, an error is thrown automatically,
-         * and the request returns a "Not Found" error.
-         *
-         * This method also checks resource ownership. If the requester is
-         * not the resource owner, the resource will not be found in the database.
-         * Even if the return value is not used, calling this method ensures
-         * authorization.
-         */
-        const { resource } = await this.getResource(
-          body.id,
-          body.pt as Address,
-          req.requester
-        );
-
-        // Execute the SQL query with the provided arguments
-        const result = await this.sqlQuery(resource, body.query);
-
-        // Return the response
-        return {
-          code: PipeResponseCode.OK,
-          body: result,
-        };
-    });
-}
-```
-
-Once you are done with defining the abstract class, navigate to `src/protocol/provider.ts` and add a boilerplate implementation for your base class. For example:
-
-```typescript
-/**
- * The main class that implements Provider specific actions.
- * @responsible Provider
- */
-export class MainProviderImplementation extends BaseExampleServiceProvider {
-  // Other abstract functions...
-
-  async sqlQuery(resource: Resource, query: string): Promise<any[]> {
-    /**
-     * TODO: Implement how to execute an SQL query within the database.
-     * This function should process the query and return results accordingly.
-     */
-    throw new Error("Method not implemented.");
-  }
-}
-```
-
-As the last step copy over your Protocol and Protocol Owner details files into `data/details` folder. The names of the files don't matter but please don't change them after registering on-chain as the files are looked up by the daemon based on their CIDs. So if you change the contents you will need to update the files commitments on-chain.
-
-### 3. Prepare the README file for Users and Providers
-
-Now you need to create a human-readable specification of your Protocol. You have total freedom to shape this document in a way you think is best. However we provide two templates for inspiration (`README_template_1.md`: [here](./docs/README_template_1.md)) and (`README_template_2.md`: [here](./docs/README_template_2.md)). Rename the chosen file to `README.md` (this will override this, but that's fine).
-
-From now on the `README.md` will include basic information about your Protocol that might be interesting to Users. It also links to a Provider tutorial on how to easily integrate with your Protocol. So the last thing you need to do is customize the information by filling out the missing parts in your PT's `README.md` as well as in the `README_Become_a_Provider.md`.
-
-### 4. Grow Your Protocol
-
-Congratulations! You have registered in the Protocol and created your Protocol. Now, publish your Provider Template and inform potential Providers and Validators on how to participate in your Protocol.
+If you want to start providing services in this Protocol follow this tutorial: [link](docs/become-a-provider.md)
