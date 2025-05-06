@@ -1,21 +1,21 @@
-import { Agreement } from "@forest-protocols/sdk";
+import { Agreement, PipeResponseCode } from "@forest-protocols/sdk";
 import {
-  BaseExampleServiceProvider,
-  ExampleResourceDetails,
+  ScorePredictionServiceProvider,
+  ScorePredictionResourceDetails,
 } from "./base-provider";
 import { DetailedOffer, Resource } from "@/types";
 
 /**
  * The main class that implements provider specific actions.
  * @responsible Provider
- * @implements {BaseExampleServiceProvider}
+ * @implements {ScorePredictionServiceProvider}
  */
-export class MainProviderImplementation extends BaseExampleServiceProvider {
-  async doSomething(
+export class MainProviderImplementation extends ScorePredictionServiceProvider {
+  async predictFixtureResults(
     agreement: Agreement,
     resource: Resource,
-    additionalArgument: string
-  ): Promise<{ stringResult: string; numberResult: number }> {
+    challenges: string[]
+  ): Promise<{ predictions: string[]; responseCode: PipeResponseCode }> {
     /**
      * TODO: Implement the logic of this protocol-specific action.
      */
@@ -27,20 +27,13 @@ export class MainProviderImplementation extends BaseExampleServiceProvider {
      * to its definition and based on your providing way.
      */
 
-    // Find the meaning of the life...
-    const result =
-      0b101010 - (crypto.getRandomValues(new Uint8Array(1))[0] & 1);
-
-    return {
-      numberResult: result,
-      stringResult: `According to ${resource.name}, the meaning of the life is ${result}`,
-    };
+    throw new Error("Method not implemented.");
   }
 
   async create(
     agreement: Agreement,
     offer: DetailedOffer
-  ): Promise<ExampleResourceDetails> {
+  ): Promise<ScorePredictionResourceDetails> {
     /**
      * TODO: Implement how the Resource will be created.
      */
@@ -69,7 +62,7 @@ export class MainProviderImplementation extends BaseExampleServiceProvider {
     agreement: Agreement,
     offer: DetailedOffer,
     resource: Resource
-  ): Promise<ExampleResourceDetails> {
+  ): Promise<ScorePredictionResourceDetails> {
     /**
      * TODO: Implement retrieval of the details from the actual Resource source.
      */

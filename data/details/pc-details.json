@@ -1,0 +1,18 @@
+{
+  "name": "Football Score Predictions",
+  "tests": [
+    {
+      "name": "Ranked-Probability Score",
+      "description": "The core scoring logic uses the RPS formula to compare the provider's predicted probabilities (p.h, p.d, p.a) against the actual outcome (o: \"home\", \"draw\", or \"away\"). The raw RPS value is transformed into a final score between potentially 0 and 100 using the formula Math.round((1 - rps) * 100)."
+    }
+  ],
+  "offerParams": [
+    {
+      "name": "Number of Predictions",
+      "unit": "item",
+      "priority": 100,
+      "isPrimary": true,
+      "isFilterable": true
+    }
+  ]
+}

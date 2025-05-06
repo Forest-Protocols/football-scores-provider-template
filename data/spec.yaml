@@ -3,26 +3,21 @@
 openapi: 3.0.0
 info:
   # Command name that going to be appear in CLI. [MUST]
-  x-forest-cli-command: psql
+  x-forest-cli-command: football-scores
 
   # Aliases for the command defined above. [OPTIONAL]
   x-forest-cli-aliases:
-    - postgresql
-    - postgre-sql
-  title: PostgreSQL Protocol
-  description: API for PostgreSQL Protocol
+    - football
+  title: Football Scores Prediction Protocol
+  description: API for predicting football match scores
   version: "1.0"
   license:
     name: MIT
 paths:
-  /query:
-    post:
-      # Specifies if this endpoint is Provider specific or not.
-      # If that is true, user has to send provider id within the request to
-      # point which Provider that he is going to communicate from the target operator
+  /predict-fixture-results:
+    get:
       x-forest-provider-endpoint: true
-
-      description: Executes the given SQL query in the database
+      description: Predicts the results of upcoming football fixtures
       requestBody:
         content:
           application/json:
@@ -31,30 +26,44 @@ paths:
               required:
                 - id
                 - pt
-                - sql
+                - challenges
               properties:
                 id:
                   type: number
                   description: ID of the resource
                 pt:
                   type: string
-                  description: Protocol address that the resource created in
-                sql:
-                  type: string
-                  description: SQL query to be executed.
+                  description: Protocol address that the resource was created in
+                challenges:
+                  type: array
+                  description: Array of challenge objects to predict results for
+                  items:
+                    type: string
+                    description: JSON string containing challenge details
+                    example: '{"challengeId": "9c365ad3-5280-4093-bb83-e492dceee6b6", "homeTeam": "Hearts", "awayTeam": "Motherwell", "venue": "Tynecastle Park", "league": "Premiership", "fixtureId": "19415354", "kickoffTime": "2025-05-10T16:00:00+02:00", "phaseIdentifier": "T7D", "targetMarket": "1X2", "difficulty": 142, "deadline": "2025-05-06T18:07:36.560+02:00"}'
       responses:
         "200":
-          description: SQL executed successfully
+          description: Predictions generated successfully
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  results:
+                  predictions:
                     type: array
-                    description: Results
+                    description: Array of prediction results
                     items:
-                      type: object
+                      type: string
+                  responseCode:
+                    type: string
+                    enum:
+                      - OK
+                      - ERROR
+                    description: Response status code
+        "400":
+          description: Invalid request - challenge format error
+        "404":
+          description: Resource not found
   /resources:
     get:
       summary: Get one or all of the resources

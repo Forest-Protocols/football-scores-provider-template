@@ -10,6 +10,21 @@ import { Resource, ResourceDetails } from "@/types";
 import { z } from "zod";
 import { Address } from "viem";
 
+// Define the challenge schema
+const challengeSchema = z.object({
+  challengeId: z.string().uuid(),
+  homeTeam: z.string(),
+  awayTeam: z.string(),
+  venue: z.string(),
+  league: z.string(),
+  fixtureId: z.number(),
+  kickoffTime: z.string().datetime(),
+  phaseIdentifier: z.enum(["T7D", "T36H", "T12H", "T1H", "T1M"]),
+  targetMarket: z.literal("1X2"),
+  difficulty: z.number(),
+  deadline: z.string().datetime()
+});
+
 /**
  * Defines the structure of details stored for each created Resource.
  * Contains both public and private information about the resource.
@@ -17,11 +32,9 @@ import { Address } from "viem";
  * @property Example_Detail - A numeric value representing [describe purpose]
  * @property _examplePrivateDetailWontSentToUser - Internal data not exposed to users
  */
-export type ExampleResourceDetails = ResourceDetails & {
-  Example_Detail: number;
-
-  /* This field won't be sent when the User requested it */
-  _examplePrivateDetailWontSentToUser: string;
+export type ScorePredictionResourceDetails = ResourceDetails & {
+  Predictions_Allowance_Count: number;
+  Predictions_Count: number;
 };
 
 /**
@@ -29,9 +42,9 @@ export type ExampleResourceDetails = ResourceDetails & {
  * All Protocol providers must extend this class and implement its abstract methods.
  * @responsible Protocol Owner
  * @abstract
- * @template ExampleResourceDetails - Type defining resource details structure
+ * @template ScorePredictionResourceDetails - Type defining resource details structure
  */
-export abstract class BaseExampleServiceProvider extends AbstractProvider<ExampleResourceDetails> {
+export abstract class ScorePredictionServiceProvider extends AbstractProvider<ScorePredictionResourceDetails> {
   // These are network-wide actions defined in `AbstractProvider` from which this class inherits. They have to be implemented by all of the Providers.
   /**
    * abstract create(agreement: Agreement, offer: DetailedOffer): Promise<T>;
@@ -50,47 +63,31 @@ export abstract class BaseExampleServiceProvider extends AbstractProvider<Exampl
    */
 
   /**
-   * An example function that represents protocol-specific action. This
-   * function has to be implemented by all of the Providers who want to
-   * participate in this Protocol.
-   *
-   * The definition is up to the Protocol Owner. So if some of the
-   * arguments are not needed, they can be deleted. E.g. `agreement` or
-   * `resource` can be deleted if they are unnecessary for this particular implementation.
+   * Predicts the results of upcoming football fixtures.
    * @param agreement On-chain agreement data.
    * @param resource Resource information stored in the database.
-   * @param additionalArgument Extra argument that related to the functionality (if needed).
-   * @returns Promise containing string and number results
+   * @param challenges The challenges to predict the results for (array of stringified json objects)
+   * @returns Promise containing the predictions and a response code.
    * @throws {Error} When the operation fails
    */
-  abstract doSomething(
+  abstract predictFixtureResults(
     agreement: Agreement,
     resource: Resource,
-    additionalArgument: string
-  ): Promise<{ stringResult: string; numberResult: number }>;
+    challenges: string[]
+  ): Promise<{ predictions: string[]; responseCode: PipeResponseCode }>;
 
   async init(providerTag: string) {
     // Base class' `init` function must be called.
     await super.init(providerTag);
 
-    /**
-     * If your service has some functionalities/interactions (like "doSomething" method)
-     * you can define "Pipe" routes to map the incoming requests from end users to the
-     * corresponding methods.
-     *
-     * Pipe is a simple abstraction layer that allows Actors to communicate with each other in a
-     * HTTP-like request-response style.
-     *
-     * Take a look at the example below:
-     */
-
-    /** Calls "doSomething" method. */
-    this.route(PipeMethod.GET, "/do-something", async (req) => {
+    /** Calls "predictFixtureResults" method. */
+    this.route(PipeMethod.GET, "/predict-fixture-results", async (req) => {
       /**
        * Validate the params/body of the request. If they are not valid,
        * request will reply back to the user with a validation error message
        * and a 'bad request' code automatically.
        */
+      
       const body = validateBodyOrParams(
         req.body,
         z.object({
@@ -100,28 +97,22 @@ export abstract class BaseExampleServiceProvider extends AbstractProvider<Exampl
           /** Protocol address in which the resource was created. */
           pt: addressSchema, // A pre-defined Zod schema for smart contract addresses.
 
-          /** Additional argument for the method. */
-          argument: z.string(),
+          /** Argument containing the challenges to predict the results for. */
+          challenges: z.array(
+            z.string().refine((str: string) => {
+              try {
+                const parsed = JSON.parse(str);
+                return challengeSchema.safeParse(parsed).success;
+              } catch {
+                return false;
+              }
+            }, {
+              message: "Each challenge must be a valid JSON object with required fields: challengeId (UUID), homeTeam, awayTeam, venue, league, fixtureId, kickoffTime (ISO datetime), phaseIdentifier (T7D, T36H, T12H, T1H, T1M), targetMarket (1X2), difficulty, and deadline (ISO datetime)"
+            })
+          ),
         })
       );
 
-      /**
-       * Retrieve the resource from the database.
-       *
-       * IMPORTANT NOTE:
-       * We need to authorize the user (to be sure that he is the actual owner
-       * of the resource) before processing the request. To do this, we can
-       * use `this.getResource`. This method tries to find the resource data
-       * in the database based on the requester and throws relevant errors if it cannot be found.
-       * If the requester is not the owner of the resource, it won't be found either.
-       *
-       * Even if you are not using the Resource data, you need to call the `this.getResource`
-       * method in the endpoints that serve Users based on a Resource purchase.
-       * This is because this method checks whether the requesting User is authorized
-       * to use the Resource, whether the relevant Agreement is still active and has sufficient
-       * funds. Otherwise we are responding to requests that do not meet these conditions,
-       * which is not desirable.
-       */
       const { agreement, resource } = await this.getResource(
         body.id,
         body.pt as Address,
@@ -129,7 +120,11 @@ export abstract class BaseExampleServiceProvider extends AbstractProvider<Exampl
       );
 
       // Call the actual method logic and retrieve the results.
-      const result = await this.doSomething(agreement, resource, body.argument);
+      const result = await this.predictFixtureResults(
+        agreement,
+        resource,
+        body.challenges
+      );
 
       // Return the response with the results.
       return {
