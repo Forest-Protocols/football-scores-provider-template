@@ -35,12 +35,9 @@ paths:
                   type: string
                   description: Protocol address that the resource was created in
                 challenges:
-                  type: array
-                  description: Array of challenge objects to predict results for
-                  items:
-                    type: string
-                    description: JSON string containing challenge details
-                    example: '{"challengeId": "9c365ad3-5280-4093-bb83-e492dceee6b6", "homeTeam": "Hearts", "awayTeam": "Motherwell", "venue": "Tynecastle Park", "league": "Premiership", "fixtureId": "19415354", "kickoffTime": "2025-05-10T16:00:00+02:00", "phaseIdentifier": "T7D", "targetMarket": "1X2", "difficulty": 142, "deadline": "2025-05-06T18:07:36.560+02:00"}'
+                  type: string
+                  description: JSON string containing array of challenge objects to predict results for
+                  example: '[{"challengeId": "9c365ad3-5280-4093-bb83-e492dceee6b6", "homeTeam": "Hearts", "awayTeam": "Motherwell", "venue": "Tynecastle Park", "league": "Premiership", "fixtureId": 19415354, "kickoffTime": "2025-05-10T16:00:00+02:00", "phaseIdentifier": "T7D", "targetMarket": "1X2", "difficulty": 142, "deadline": "2025-05-06T18:07:36.560+02:00"}]'
       responses:
         "200":
           description: Predictions generated successfully
@@ -50,10 +47,8 @@ paths:
                 type: object
                 properties:
                   predictions:
-                    type: array
-                    description: Array of prediction results
-                    items:
-                      type: string
+                    type: string
+                    description: JSON string containing array of prediction results
                   responseCode:
                     type: string
                     enum:
