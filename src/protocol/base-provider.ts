@@ -9,6 +9,7 @@ import { AbstractProvider } from "@/abstract/AbstractProvider";
 import { Resource, ResourceDetails } from "@/types";
 import { z } from "zod";
 import { Address } from "viem";
+import { nonEmptyStringSchema } from "@/validation/schemas";
 
 // Define the challenge schema
 const challengeSchema = z.object({
@@ -73,8 +74,8 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
   abstract predictFixtureResults(
     agreement: Agreement,
     resource: Resource,
-    challenges: string[]
-  ): Promise<{ predictions: string[]; responseCode: PipeResponseCode }>;
+    challenges: string
+  ): Promise<{ predictions: string; responseCode: PipeResponseCode }>;
 
   async init(providerTag: string) {
     // Base class' `init` function must be called.
@@ -98,18 +99,7 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
           pt: addressSchema, // A pre-defined Zod schema for smart contract addresses.
 
           /** Argument containing the challenges to predict the results for. */
-          challenges: z.array(
-            z.string().refine((str: string) => {
-              try {
-                const parsed = JSON.parse(str);
-                return challengeSchema.safeParse(parsed).success;
-              } catch {
-                return false;
-              }
-            }, {
-              message: "Each challenge must be a valid JSON object with required fields: challengeId (UUID), homeTeam, awayTeam, venue, league, fixtureId, kickoffTime (ISO datetime), phaseIdentifier (T7D, T36H, T12H, T1H, T1M), targetMarket (1X2), difficulty, and deadline (ISO datetime)"
-            })
-          ),
+          challenges: nonEmptyStringSchema,
         })
       );
 
@@ -129,7 +119,7 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
       // Return the response with the results.
       return {
         code: PipeResponseCode.OK,
-        body: result,
+        body: result.predictions,
       };
     });
   }
