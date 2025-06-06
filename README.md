@@ -20,7 +20,7 @@ This protocol enables providers to offer football match score prediction service
 | ------------------------------ | --------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GET /details`                 | `body: string[]`                                          | `string[]`                                                 | Retrieves the contents of detail files for the given CIDs. If one CID is given and corresponding file is not found, returns 404/Not Found. Otherwise returns an array of contents of the files |
 | `GET /resources`               | `params: { id?: number, pt?: Address }`                   | `Resource[] \| Resource`                                   | If `id` and `pt` is given, retrieves one resource information. Otherwise returns all resources of the requester                                                                                |
-| `GET /predict-fixture-results` | `body: { id: number, pt: Address, challenges: string }` | `{ predictions: string, responseCode: "OK" \| "ERROR" }` | Predicts the results of upcoming football fixtures. Challenges object must be a JSON string with a array of challenges to predict. The response is also a JSON string with an array of predictions.                                                       |
+| `GET /predict-fixture-results` | `body: { id: number, pt: Address, challenges: string, providerId: Address }` | `{ body: string, code: "OK" \| "ERROR" }` | Predicts the results of upcoming football fixtures. Challenges object must be a JSON string with a array of challenges to predict. The response body is also a JSON string with an array of predictions.                                                       |
 
 ### Challenge Object Structure
 
@@ -42,7 +42,7 @@ This protocol enables providers to offer football match score prediction service
 ]
 ```
 
-### Predictions Object Structure
+### Response Body Object Structure
 
 ```json
 [
