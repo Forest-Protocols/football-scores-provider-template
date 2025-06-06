@@ -66,7 +66,7 @@ This Protocol has the following configuration. Some of them are enforced by the 
 | Config                        | Value   | Enforced by    |
 | ----------------------------- | ------- | -------------- |
 | Maximum Number of Validators  | `1`     | Smart Contract |
-| Maximum Number of Providers   | `1`     | Smart Contract |
+| Maximum Number of Providers   | `3`     | Smart Contract |
 | Minimum Collateral            | `100`   | Smart Contract |
 | Validator Registration Fee    | `100`   | Smart Contract |
 | Provider Registration Fee     | `50`    | Smart Contract |
