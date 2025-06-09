@@ -69,65 +69,23 @@ First, create files that contain details for each Offer you plan to register. Yo
 
 ##### 3.1 Creating the Offer details file
 
-**Plain text example**
-
-```
-Minimum of 2 requests per minute.
-At least 200 API calls per subscription per month.
-```
-
-**JSON schemed example**
-
 Create a JSON file following the type definitions below:
 
-> These are pseudo-type definitions to illustrate the JSON schema.
-
-```typescript
-type Numeric_Offer_Parameter = {
-  value: number;
-  unit: string;
-};
-
-type Single_Offer_Parameter = string | boolean | Numeric_Offer_Parameter;
-
-type Multiple_Offer_Parameter = Single_Offer_Parameter[];
-
-type Offer_Parameter = Single_Offer_Parameter | Multiple_Offer_Parameter;
-
-type JSON_Offer_Details = {
-  name: string; // Descriptive name
-  deploymentParams?: any; // Deployment parameters for resource creation in the Provider daemon.
-
-  // Visible parameters to users
-  params: {
-    [visible_parameter_name: string]: Offer_Parameter;
-  };
-};
-```
-
-An example JSON file based on these type definitions:
+An example JSON file based Offer:
 
 ```json
 {
-  "name": "SQLite Cheap Small Disk",
-  "deploymentParams": {
-    "maxRAM": "512",
-    "diskSize": "1024"
-  },
-  "params": {
-    "RAM": {
-      "value": 512,
-      "unit": "MB"
-    },
-    "Disk Size": {
-      "value": 1,
-      "unit": "GB"
-    },
-    "Disk Type": "SSD",
-    "Features": ["Query over Pipe", "Super cheap"]
-  }
+    "name": "Football Fixtures Offer from <Provider Name>",
+    "params": {
+        "Number of Predictions": {
+            "unit": "item",
+            "value": 1500
+        }
+    }
 }
 ```
+
+> `-1` in `value` for unlimited allowance on number of predictions made each month.
 
 ##### 3.2 Saving the file
 
@@ -160,7 +118,7 @@ Open the `src/protocol/provider.ts` file and implement all of the following meth
 | `create(agreement: Agreement, offer: DetailedOffer): Promise<*Details>`                         | This method is triggered when a user enters an Agreement. It provisions the actual resource based on the Agreement and Offer, returning resource details. If provisioning takes time, it returns a `Deploying` status. The daemon process then tracks the deployment using `getDetails` until the resource reaches `Running` status. |
 | `getDetails(agreement: Agreement, offer: DetailedOffer, resource: Resource): Promise<*Details>` | Called periodically if the resource is not in `Running` status after `create()`. It retrieves current details about the resource from the actual source. The daemon process saves the returned details to the database after each call.                                                                                              |
 | `delete(agreement: Agreement, offer: DetailedOffer, resource: Resource): Promise<void>`         | Called when a user closes an Agreement, ensuring the actual resource is deleted.                                                                                                                                                                                                                                                     |
-| `{Method definition}`                                                                           | `{Purpose of the method and explanation}`                                                                                                                                                                                                                                                                                            |
+| `predictFixtureResults(agreement: Agreement, resource: Resource, challenges: string): Promise<{ predictions: string; responseCode: PipeResponseCode }>`                                                                           | `Predicts the results of upcoming football fixtures. Challenges object must be a JSON string with a array of challenges to predict. The response body is also a JSON string with an array of predictions.` |
 
 Once implementation is complete, place your Provider and Offer detail files into the `data/details` folder.
 
