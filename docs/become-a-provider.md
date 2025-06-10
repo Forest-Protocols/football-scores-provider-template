@@ -62,14 +62,9 @@ forest provider register-in \
 
 Now that you are registered in the Network and this Protocol, the next step is to register your Offers.
 
-First, create files that contain details for each Offer you plan to register. You have two options for these details files:
-
-- Create a plain text or Markdown file with human-readable Offer details. This approach does not allow parameterization of Offers. Also these details won't be visible in the CLI. However this approach is often good enough for a number of use cases like API access.
-- Create a JSON file following the schema below. This approach makes Offer details visible and filterable in the CLI and the Marketplace while also allowing parameterization of resource creation.
+First, create files that contain details for each Offer you plan to register.
 
 ##### 3.1 Creating the Offer details file
-
-Create a JSON file following the type definitions below:
 
 An example JSON file based Offer:
 
@@ -118,7 +113,7 @@ Open the `src/protocol/provider.ts` file and implement all of the following meth
 | `create(agreement: Agreement, offer: DetailedOffer): Promise<*Details>`                         | This method is triggered when a user enters an Agreement. It provisions the actual resource based on the Agreement and Offer, returning resource details. If provisioning takes time, it returns a `Deploying` status. The daemon process then tracks the deployment using `getDetails` until the resource reaches `Running` status. |
 | `getDetails(agreement: Agreement, offer: DetailedOffer, resource: Resource): Promise<*Details>` | Called periodically if the resource is not in `Running` status after `create()`. It retrieves current details about the resource from the actual source. The daemon process saves the returned details to the database after each call.                                                                                              |
 | `delete(agreement: Agreement, offer: DetailedOffer, resource: Resource): Promise<void>`         | Called when a user closes an Agreement, ensuring the actual resource is deleted.                                                                                                                                                                                                                                                     |
-| `predictFixtureResults(agreement: Agreement, resource: Resource, challenges: string): Promise<{ predictions: string; responseCode: PipeResponseCode }>`                                                                           | `Predicts the results of upcoming football fixtures. Challenges object must be a JSON string with a array of challenges to predict. The response body is also a JSON string with an array of predictions.` |
+| `predictFixtureResults(agreement: Agreement, resource: Resource, challenges: string): Promise<{ predictions: string; responseCode: PipeResponseCode }>`                                                                           | Predicts the results of upcoming football fixtures. `challenges` object must be a JSON string with a array of challenges to predict. The response is also a JSON string with an array of predictions. |
 
 Once implementation is complete, place your Provider and Offer detail files into the `data/details` folder.
 
