@@ -8,11 +8,11 @@ This protocol enables providers to offer football match score prediction service
 
 | Name                      | Value                      |
 | ------------------------- | -------------------------- |
-| PT Smart Contract Address | `{Smart Contract Address}` |
-| PT Registration Date      | `{Date of registration}`   |
-| PT Details File CID       | `{CID}`                    |
-| PT Owner Wallet Address   | `{Public Wallet Address}`  |
-| PT Owner Details File CID | `{CID}`                    |
+| PT Smart Contract Address | `0x592483982A67336A742947fC06E36f6d54051AC9` |
+| PT Registration Date      | `May-14-2025`   |
+| PT Details File CID       | `bagaaieraq7ozqwbguml6at3qmwylzfvrlb2spn24qjqvamj4ytql5pfq6x2q` |
+| PT Owner Wallet Address   | `0xA4434214Af80bF856b556053B831596Cf02939d5`  |
+| PT Owner Details File CID | `bagaaieras7kbhy57nvnzpvkvgk34kad6tg24iox6sejlajfxagtqlspzbwza` |
 
 ## Supported Actions (Endpoints)
 
@@ -20,26 +20,43 @@ This protocol enables providers to offer football match score prediction service
 | ------------------------------ | --------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GET /details`                 | `body: string[]`                                          | `string[]`                                                 | Retrieves the contents of detail files for the given CIDs. If one CID is given and corresponding file is not found, returns 404/Not Found. Otherwise returns an array of contents of the files |
 | `GET /resources`               | `params: { id?: number, pt?: Address }`                   | `Resource[] \| Resource`                                   | If `id` and `pt` is given, retrieves one resource information. Otherwise returns all resources of the requester                                                                                |
-| `GET /predict-fixture-results` | `body: { id: number, pt: Address, challenges: string[] }` | `{ predictions: string[], responseCode: "OK" \| "ERROR" }` | Predicts the results of upcoming football fixtures. Each challenge in the array must be a valid JSON string containing match details                                                           |
+| `GET /predict-fixture-results` | `body: { id: number, pt: Address, challenges: string, providerId: Address }` | `{ body: string, code: "OK" \| "ERROR" }` | Predicts the results of upcoming football fixtures. `challenges` object must be a JSON string with a array of challenges to predict. The response body is also a JSON string with an array of predictions.                                                       |
 
 ### Challenge Object Structure
 
-Each challenge in the `challenges` array must be a JSON string with the following structure:
+```json
+[
+  {
+    "challengeId": "match_001",
+    "homeTeam": "Arsenal",
+    "awayTeam": "Chelsea",
+    "league": "Premier League",
+    "venue": "Emirates Stadium",
+    "fixtureId": 12345,
+    "kickoffTime": "2024-01-15T15:00:00Z",
+    "challengePhaseMinutes": 90,
+    "targetMarket": "1X2",
+    "phaseIdentifier": "FT",
+    "difficulty": 0.5
+  }
+]
+```
+
+### Response Body Object Structure
 
 ```json
-{
-  "challengeId": "9c365ad3-5280-4093-bb83-e492dceee6b6",
-  "homeTeam": "Hearts",
-  "awayTeam": "Motherwell",
-  "venue": "Tynecastle Park",
-  "league": "Premiership",
-  "fixtureId": "19415354",
-  "kickoffTime": "2025-05-10T16:00:00+02:00",
-  "phaseIdentifier": "T7D",
-  "targetMarket": "1X2",
-  "difficulty": 142,
-  "deadline": "2025-05-06T18:07:36.560+02:00"
-}
+[
+  {
+    "challengeId": "match_001",
+    "prediction": {
+      "1X2": {
+        "home": 0.45,
+        "draw": 0.3,
+        "away": 0.25
+      }
+    }
+  }
+]
 ```
 
 ## Configuration Parameters
@@ -49,7 +66,7 @@ This Protocol has the following configuration. Some of them are enforced by the 
 | Config                        | Value   | Enforced by    |
 | ----------------------------- | ------- | -------------- |
 | Maximum Number of Validators  | `1`     | Smart Contract |
-| Maximum Number of Providers   | `1`     | Smart Contract |
+| Maximum Number of Providers   | `3`     | Smart Contract |
 | Minimum Collateral            | `100`   | Smart Contract |
 | Validator Registration Fee    | `100`   | Smart Contract |
 | Provider Registration Fee     | `50`    | Smart Contract |
@@ -58,9 +75,9 @@ This Protocol has the following configuration. Some of them are enforced by the 
 | Validators Share of Emissions | `20%`   | Smart Contract |
 | Providers Share of Emissions  | `50%`   | Smart Contract |
 | PT Owner Share of Emissions   | `30%`   | Smart Contract |
-| CID of the Details File       | `{CID}` | Smart Contract |
+| CID of the Details File       | `bagaaieraq7ozqwbguml6at3qmwylzfvrlb2spn24qjqvamj4ytql5pfq6x2q` | Smart Contract |
 
-You can always double-check the on-chain values e.g. [here](https://sepolia-optimism.etherscan.io/address/`{Smart Contract Address}`#readContract)
+You can always double-check the on-chain values e.g. [here](https://sepolia.basescan.org/address/0x592483982A67336A742947fC06E36f6d54051AC9)
 
 ## Performance Requirements
 
@@ -68,7 +85,7 @@ The Validators are performing a number of tests on Resources to ensure quality a
 
 | Name             | Units  | Threshold Value | Min / Max |
 | ---------------- | ------ | --------------- | --------- |
-| Prediction Score | Points | 51              | Min       |
+| Prediction Score | Points | 0              | Min       |
 | Response Time    | ms     | 12000           | Max       |
 | Availability     | %      | 99.9%           | Min       |
 
