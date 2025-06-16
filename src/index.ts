@@ -63,7 +63,6 @@ function indexerAgreementToAgreement(
 class Program {
   providers = {
     main: new MainProviderImplementation(),
-    localBareMetal: new MainProviderImplementation(),
   };
 
   indexer = new Indexer({
@@ -631,7 +630,7 @@ class Program {
 
 const program = new Program();
 program.main().then(() => {
-  logger.info(ansis.yellow("See ya..."));
+  logger.warning("See ya...");
   process.exit(process.exitCode || 0);
 });
 
