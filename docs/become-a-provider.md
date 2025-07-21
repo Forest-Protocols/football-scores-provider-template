@@ -44,7 +44,7 @@ Install:
         --details <JSON file name> \
         --account <private key file>
    ```
-   TESTNET NOTE: if you need testnet tokens reach out to the Forest Protocols team on [Discord](https://discord.gg/2MsTWq2tc7).
+   TESTNET NOTE: if you need testnet tokens reach out to the Forest Protocols team on [Discord](https://discord.gg/HWm96wKzWV).
 7. Save your detail file somewhere. Later you'll place this file into `data/details` folder.
 
 #### 2. Register in this Protocol
@@ -113,7 +113,7 @@ Open the `src/protocol/provider.ts` file and implement all of the following meth
 | `create(agreement: Agreement, offer: DetailedOffer): Promise<*Details>`                         | This method is triggered when a user enters an Agreement. It provisions the actual resource based on the Agreement and Offer, returning resource details. If provisioning takes time, it returns a `Deploying` status. The daemon process then tracks the deployment using `getDetails` until the resource reaches `Running` status. |
 | `getDetails(agreement: Agreement, offer: DetailedOffer, resource: Resource): Promise<*Details>` | Called periodically if the resource is not in `Running` status after `create()`. It retrieves current details about the resource from the actual source. The daemon process saves the returned details to the database after each call.                                                                                              |
 | `delete(agreement: Agreement, offer: DetailedOffer, resource: Resource): Promise<void>`         | Called when a user closes an Agreement, ensuring the actual resource is deleted.                                                                                                                                                                                                                                                     |
-| `predictFixtureResults(agreement: Agreement, resource: Resource, challenges: string): Promise<{ predictions: string; responseCode: PipeResponseCode }>`                                                                           | Predicts the results of upcoming football fixtures. `challenges` object must be a JSON string with a array of challenges to predict. The response is also a JSON string with an array of predictions. |
+| `predictFixtureResults(agreement: Agreement, resource: Resource, challenges: string): Promise<{ predictions: string; responseCode: PipeResponseCode }>`                                                                           | Predicts the results of upcoming football fixtures. `challenges` object must be a JSON string with an array of challenges to predict. The response is also a JSON string with an array of predictions. |
 
 Once implementation is complete, place your Provider and Offer detail files into the `data/details` folder.
 
