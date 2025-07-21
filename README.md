@@ -1,14 +1,14 @@
 # Protocol: Football Scores Prediction
 
 ## Table of Contents
-- [⚽️ Description](#description)
-- [📋 Basic Info](#basic-info)
-- [⚙️ Configuration Parameters](#configuration-parameters)
-- [⏱️ Performance Requirements](#performance-requirements)
-- [🏆 Scoring System Details](#scoring-system-details)
-- [🔗 Communication Schemas](#communication-schemas)
-- [🚀 Become a Provider](#become-a-provider-in-this-protocol) 👈👈👈
-- [📊 Data for Your Machine Learning Model](#data-for-your-machine-learning-model)
+- [⚽️ Description](#-description)
+- [📋 Basic Info](#-basic-info)
+- [⚙️ Configuration Parameters](#-configuration-parameters)
+- [⏱️ Performance Requirements](#-performance-requirements)
+- [🏆 Scoring System Details](#-scoring-system-details)
+- [🔗 Communication Schemas](#-communication-schemas)
+- [🚀 Become a Provider](#-become-a-provider-in-this-protocol) 👈👈👈
+- [📊 Data for Your Machine Learning Model](#-data-for-your-machine-learning-model)
 
 ## ⚽️ Description
 
