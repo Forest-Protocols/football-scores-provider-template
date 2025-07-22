@@ -16,7 +16,7 @@
 
 This protocol enables Providers to offer football match score prediction services. Providers can predict outcomes of upcoming football fixtures across various leagues, with predictions made at different time intervals before the match (`T7D`, `T36H`, `T12H`, `T1H`, `T1M`). The protocol supports `1X2` market predictions (Home Win/Draw/Away Win).
 
-List of supported leagues: `TODO`
+List of supported leagues: `Premier League`, `La Liga`, `Bundesliga`, `Serie A`, `Ligue 1`, `Primeira Liga`, `EFL Championship` and `MLS` 
 
 ## 📋 Basic Info
 
