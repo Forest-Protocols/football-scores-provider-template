@@ -158,7 +158,7 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
       for (const challenge of challenges) {
         const prediction = this.getCachedPrediction(challenge.challengeId);
         if (prediction) {
-          this.logger.debug(
+          this.logger.info(
             `Prediction of challenge ${colorWord(
               challenge.challengeId
             )} is using from cache`
