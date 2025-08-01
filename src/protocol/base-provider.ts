@@ -1,8 +1,12 @@
 import {
   addressSchema,
   Agreement,
-  PipeMethod,
-  PipeResponseCode,
+  PipeError,
+  PipeMethods,
+  PipeResponseCodes,
+  PipeResponseCodeType,
+  PromiseQueue,
+  tryParseJSON,
   validateBodyOrParams,
 } from "@forest-protocols/sdk";
 import { AbstractProvider } from "@/abstract/AbstractProvider";
@@ -10,28 +14,39 @@ import { Resource, ResourceDetails } from "@/types";
 import { z } from "zod";
 import { Address } from "viem";
 import { nonEmptyStringSchema } from "@/validation/schemas";
+import { colorWord } from "@/color";
 
-// Define the challenge schema
-const challengeSchema = z.object({
-  challengeId: z.string().uuid(),
-  homeTeam: z.string(),
-  awayTeam: z.string(),
-  venue: z.string(),
-  league: z.string(),
-  fixtureId: z.number(),
-  kickoffTime: z.string().datetime(),
-  phaseIdentifier: z.enum(["T7D", "T36H", "T12H", "T1H", "T1M"]),
-  targetMarket: z.literal("1X2"),
-  difficulty: z.number(),
-  deadline: z.string().datetime()
+// Define schemas and types
+export const ChallengeSchema = z.object({
+  challengeId: z.string() /* .uuid() */,
+  kickoffTime: z.string(),
+  // homeTeam: z.string(),
+  // awayTeam: z.string(),
+  // venue: z.string(),
+  // league: z.string(),
+  // fixtureId: z.number(),
+  // kickoffTime: z.string().datetime(),
+  // phaseIdentifier: z.enum(["T7D", "T36H", "T12H", "T1H", "T1M"]),
+  // targetMarket: z.literal("1X2"),
+  // difficulty: z.number(),
+  // deadline: z.string().datetime(),
 });
+export type Challenge = z.infer<typeof ChallengeSchema>;
+
+export const PredictionSchema = z.object({
+  challengeId: z.string() /* .uuid() */,
+  prediction: z.object({
+    "1X2": z.object({
+      home: z.number() /* .min(0).max(1) */,
+      draw: z.number() /* .min(0).max(1) */,
+      away: z.number() /* .min(0).max(1) */,
+    }),
+  }),
+});
+export type Prediction = z.infer<typeof PredictionSchema>;
 
 /**
- * Defines the structure of details stored for each created Resource.
- * Contains both public and private information about the resource.
- * @responsible Protocol Owner
- * @property Example_Detail - A numeric value representing [describe purpose]
- * @property _examplePrivateDetailWontSentToUser - Internal data not exposed to users
+ * Resource details stored for each Agreement
  */
 export type ScorePredictionResourceDetails = ResourceDetails & {
   Predictions_Allowance_Count: number;
@@ -39,11 +54,7 @@ export type ScorePredictionResourceDetails = ResourceDetails & {
 };
 
 /**
- * Abstract base class defining required actions for this Protocol implementation.
- * All Protocol providers must extend this class and implement its abstract methods.
- * @responsible Protocol Owner
- * @abstract
- * @template ScorePredictionResourceDetails - Type defining resource details structure
+ * Base class that Providers have to inherit from for their Providers.
  */
 export abstract class ScorePredictionServiceProvider extends AbstractProvider<ScorePredictionResourceDetails> {
   // These are network-wide actions defined in `AbstractProvider` from which this class inherits. They have to be implemented by all of the Providers.
@@ -63,6 +74,23 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
    * ): Promise<void>;
    */
 
+  predictionCache: Record<string, Prediction> = {};
+  requestQueue = new PromiseQueue({ concurrency: 1 });
+
+  /**
+   * Gets a prediction from the cache
+   */
+  getCachedPrediction(challengeId: string) {
+    return this.predictionCache[challengeId] as Prediction | undefined;
+  }
+
+  /**
+   * Caches a prediction
+   */
+  cachePrediction(challengeId: string, prediction: Prediction) {
+    this.predictionCache[challengeId] = prediction;
+  }
+
   /**
    * Predicts the results of upcoming football fixtures.
    * @param agreement On-chain agreement data.
@@ -75,20 +103,20 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
     agreement: Agreement,
     resource: Resource,
     challenges: string
-  ): Promise<{ predictions: string; responseCode: PipeResponseCode }>;
+  ): Promise<{ predictions: string; responseCode: PipeResponseCodeType }>;
 
   async init(providerTag: string) {
     // Base class' `init` function must be called.
     await super.init(providerTag);
 
     /** Calls "predictFixtureResults" method. */
-    this.route(PipeMethod.GET, "/predict-fixture-results", async (req) => {
+    this.route(PipeMethods.GET, "/predict-fixture-results", async (req) => {
       /**
        * Validate the params/body of the request. If they are not valid,
        * request will reply back to the user with a validation error message
        * and a 'bad request' code automatically.
        */
-      
+
       const body = validateBodyOrParams(
         req.body,
         z.object({
@@ -109,17 +137,100 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
         req.requester
       );
 
-      // Call the actual method logic and retrieve the results.
-      const result = await this.predictFixtureResults(
-        agreement,
-        resource,
-        body.challenges
+      // Validate the challenges
+      const validation = ChallengeSchema.array().safeParse(
+        JSON.parse(body.challenges)
       );
+
+      if (!validation.success) {
+        throw new PipeError(PipeResponseCodes.BAD_REQUEST, {
+          message: "Validation failed",
+          errors: validation.error.issues,
+        });
+      }
+
+      const challenges = validation.data;
+
+      // Filter out the predictions that we've already made
+      const cachedPredictions: Prediction[] = [];
+      const challengesToBeSend: Challenge[] = [];
+
+      for (const challenge of challenges) {
+        const prediction = this.getCachedPrediction(challenge.challengeId);
+        if (prediction) {
+          this.logger.debug(
+            `Prediction of challenge ${colorWord(
+              challenge.challengeId
+            )} is using from cache`
+          );
+          cachedPredictions.push(prediction);
+        } else {
+          challengesToBeSend.push(challenge);
+        }
+      }
+
+      // Call the actual method logic and retrieve the results.
+      // For the sake of the cache, we are processing all the requests sequentially.
+      // So upcoming request(s) can use the cached Predictions
+      const result = await this.requestQueue.queue({
+        fn: async () => {
+          // If there is nothing to be sent to the method (which means
+          // all the challenges are already cached) just skip the call
+          if (challengesToBeSend.length === 0) {
+            this.logger.info(
+              `All the challenges are already cached, returning`
+            );
+
+            return {
+              responseCode: PipeResponseCodes.OK,
+
+              // Later we'll combine the cached predictions in the outer return.
+              // That's why here we just return an empty array.
+              predictions: [],
+            };
+          }
+
+          const { responseCode, predictions: stringifiedPredictions } =
+            await this.predictFixtureResults(
+              agreement,
+              resource,
+              JSON.stringify(challengesToBeSend)
+            );
+
+          // This is supposed to be an array of Predictions
+          // TODO: Maybe also do schema checking?
+          const parsedPredictions = tryParseJSON<Prediction[]>(
+            stringifiedPredictions
+          );
+
+          if (parsedPredictions === undefined) {
+            this.logger.error(
+              `Prediction is failed: Invalid JSON returned from predictFixtureResults()`
+            );
+            this.logger.debug(`Invalid JSON: ${stringifiedPredictions}`);
+            throw new PipeError(PipeResponseCodes.INTERNAL_SERVER_ERROR, {
+              message: "Prediction is failed",
+            });
+          }
+
+          // Cache the Predictions that we've just made
+          for (const prediction of parsedPredictions) {
+            this.cachePrediction(prediction.challengeId, prediction);
+            this.logger.info(
+              `Prediction for challenge ${prediction.challengeId} is cached`
+            );
+          }
+
+          return { responseCode, predictions: parsedPredictions };
+        },
+      });
 
       // Return the response with the results.
       return {
-        code: PipeResponseCode.OK,
-        body: result.predictions,
+        code: result.responseCode,
+
+        // Combine the result with the cached predictions
+        body: JSON.stringify([...result.predictions, ...cachedPredictions]),
       };
     });
   }
