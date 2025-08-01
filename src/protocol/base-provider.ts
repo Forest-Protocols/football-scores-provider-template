@@ -151,31 +151,31 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
 
       const challenges = validation.data;
 
-      // Filter out the predictions that we've already made
-      const cachedPredictions: Prediction[] = [];
-      const challengesToBeSend: Challenge[] = [];
-
-      for (const challenge of challenges) {
-        const prediction = this.getCachedPrediction(challenge.challengeId);
-        if (prediction) {
-          this.logger.info(
-            `Prediction of challenge ${colorWord(
-              challenge.challengeId
-            )} is using from cache`
-          );
-          cachedPredictions.push(prediction);
-        } else {
-          challengesToBeSend.push(challenge);
-        }
-      }
-
       // Call the actual method logic and retrieve the results.
       // For the sake of the cache, we are processing all the requests sequentially.
       // So upcoming request(s) can use the cached Predictions
       const result = await this.requestQueue.queue({
         fn: async () => {
+          // Filter out the predictions that we've already made
+          const cachedPredictions: Prediction[] = [];
+          const challengesToBeSend: Challenge[] = [];
+
+          for (const challenge of challenges) {
+            const prediction = this.getCachedPrediction(challenge.challengeId);
+            if (prediction) {
+              this.logger.info(
+                `Prediction of challenge ${colorWord(
+                  challenge.challengeId
+                )} is using from cache`
+              );
+              cachedPredictions.push(prediction);
+            } else {
+              challengesToBeSend.push(challenge);
+            }
+          }
+
           // If there is nothing to be sent to the method (which means
-          // all the challenges are already cached) just skip the call
+          // all the challenges are already cached) only return the cached predictions
           if (challengesToBeSend.length === 0) {
             this.logger.info(
               `All the challenges are already cached, returning`
@@ -183,10 +183,7 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
 
             return {
               responseCode: PipeResponseCodes.OK,
-
-              // Later we'll combine the cached predictions in the outer return.
-              // That's why here we just return an empty array.
-              predictions: [],
+              predictions: JSON.stringify(cachedPredictions),
             };
           }
 
@@ -198,7 +195,7 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
             );
 
           // This is supposed to be an array of Predictions
-          // TODO: Maybe also do schema checking?
+          // TODO: Maybe also do schema validation?
           const parsedPredictions = tryParseJSON<Prediction[]>(
             stringifiedPredictions
           );
@@ -221,16 +218,23 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
             );
           }
 
-          return { responseCode, predictions: parsedPredictions };
+          return {
+            responseCode,
+
+            // Combine the predictions that has been made
+            // with the cached predictions
+            predictions: JSON.stringify([
+              ...parsedPredictions,
+              ...cachedPredictions,
+            ]),
+          };
         },
       });
 
       // Return the response with the results.
       return {
         code: result.responseCode,
-
-        // Combine the result with the cached predictions
-        body: JSON.stringify([...result.predictions, ...cachedPredictions]),
+        body: result.predictions,
       };
     });
   }
