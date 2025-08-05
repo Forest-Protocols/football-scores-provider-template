@@ -17,32 +17,36 @@ import { nonEmptyStringSchema } from "@/validation/schemas";
 import { colorWord } from "@/color";
 
 // Define schemas and types
-export const ChallengeSchema = z.object({
-  challengeId: z.string() /* .uuid() */,
-  kickoffTime: z.string(),
-  // homeTeam: z.string(),
-  // awayTeam: z.string(),
-  // venue: z.string(),
-  // league: z.string(),
-  // fixtureId: z.number(),
-  // kickoffTime: z.string().datetime(),
-  // phaseIdentifier: z.enum(["T7D", "T36H", "T12H", "T1H", "T1M"]),
-  // targetMarket: z.literal("1X2"),
-  // difficulty: z.number(),
-  // deadline: z.string().datetime(),
-});
+export const ChallengeSchema = z
+  .object({
+    challengeId: z.string() /* .uuid() */,
+    kickoffTime: z.string(),
+    // homeTeam: z.string(),
+    // awayTeam: z.string(),
+    // venue: z.string(),
+    // league: z.string(),
+    // fixtureId: z.number(),
+    // kickoffTime: z.string().datetime(),
+    // phaseIdentifier: z.enum(["T7D", "T36H", "T12H", "T1H", "T1M"]),
+    // targetMarket: z.literal("1X2"),
+    // difficulty: z.number(),
+    // deadline: z.string().datetime(),
+  })
+  .passthrough();
 export type Challenge = z.infer<typeof ChallengeSchema>;
 
-export const PredictionSchema = z.object({
-  challengeId: z.string() /* .uuid() */,
-  prediction: z.object({
-    "1X2": z.object({
-      home: z.number() /* .min(0).max(1) */,
-      draw: z.number() /* .min(0).max(1) */,
-      away: z.number() /* .min(0).max(1) */,
+export const PredictionSchema = z
+  .object({
+    challengeId: z.string() /* .uuid() */,
+    prediction: z.object({
+      "1X2": z.object({
+        home: z.number() /* .min(0).max(1) */,
+        draw: z.number() /* .min(0).max(1) */,
+        away: z.number() /* .min(0).max(1) */,
+      }),
     }),
-  }),
-});
+  })
+  .passthrough();
 export type Prediction = z.infer<typeof PredictionSchema>;
 
 /**
@@ -187,11 +191,16 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
             };
           }
 
+          const stringifiedChallenges = JSON.stringify(challengesToBeSend);
+          this.logger.debug(
+            `Sending ${challengesToBeSend.length} challenges: ${stringifiedChallenges}`
+          );
+
           const { responseCode, predictions: stringifiedPredictions } =
             await this.predictFixtureResults(
               agreement,
               resource,
-              JSON.stringify(challengesToBeSend)
+              stringifiedChallenges
             );
 
           // This is supposed to be an array of Predictions
