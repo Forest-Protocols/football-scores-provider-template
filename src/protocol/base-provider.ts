@@ -138,9 +138,9 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
       );
 
       // Validate the challenges
-      const validation = ChallengeSchema.array().safeParse(
-        JSON.parse(body.challenges)
-      );
+      const validation = z
+        .array(ChallengeSchema)
+        .safeParse(JSON.parse(body.challenges));
 
       if (!validation.success) {
         throw new PipeError(PipeResponseCodes.BAD_REQUEST, {
