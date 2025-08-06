@@ -137,4 +137,7 @@ In order to compete in Forest you need a Forest Provider Daemon running and serv
 2. [*full integration*] **You run the Daemon yourself**. Take this repo and follow these [instructions](docs/become-a-provider.md). A little longer process but full ownership and control.
 
 ## 📊 Data for Your Machine Learning Model
-We provide you with daily updated football stats that might be helpful for you when training your models. Here's a link to an R2 bucket: https://pub-188d55f1c4c34a02a7a2cb79159e1c2d.r2.dev/fixtures/manifest.csv 
+We provide you with daily updated football stats that might be helpful for you when training your models. 
+Links: 
+ - R2 bucket with data: https://pub-188d55f1c4c34a02a7a2cb79159e1c2d.r2.dev/fixtures/manifest.csv
+ - Data schema description: https://ball.forestai.io/join-earn/data-schema
