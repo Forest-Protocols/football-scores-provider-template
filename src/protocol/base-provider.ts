@@ -141,10 +141,16 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
         req.requester
       );
 
+      let challenges = tryParseJSON<Challenge[]>(body.challenges);
+
+      if (!challenges) {
+        throw new PipeError(PipeResponseCodes.BAD_REQUEST, {
+          message: "Invalid challenges",
+        });
+      }
+
       // Validate the challenges
-      const validation = z
-        .array(ChallengeSchema)
-        .safeParse(JSON.parse(body.challenges));
+      const validation = z.array(ChallengeSchema).safeParse(challenges);
 
       if (!validation.success) {
         throw new PipeError(PipeResponseCodes.BAD_REQUEST, {
@@ -153,7 +159,7 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
         });
       }
 
-      const challenges = validation.data;
+      challenges = validation.data;
 
       // Call the actual method logic and retrieve the results.
       // For the sake of the cache, we are processing all the requests sequentially.
