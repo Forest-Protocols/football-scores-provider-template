@@ -15,6 +15,7 @@ import { z } from "zod";
 import { Address } from "viem";
 import { nonEmptyStringSchema } from "@/validation/schemas";
 import { colorWord } from "@/color";
+import { ensureError } from "@/utils/ensure-error";
 
 // Define schemas and types
 export const ChallengeSchema = z
@@ -202,47 +203,55 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
             `Sending ${challengesToBeSend.length} challenges: ${stringifiedChallenges}`
           );
 
-          const { responseCode, predictions: stringifiedPredictions } =
-            await this.predictFixtureResults(
-              agreement,
-              resource,
-              stringifiedChallenges
+          try {
+            const { responseCode, predictions: stringifiedPredictions } =
+              await this.predictFixtureResults(
+                agreement,
+                resource,
+                stringifiedChallenges
+              );
+
+            // This is supposed to be an array of Predictions
+            // TODO: Maybe also do schema validation?
+            const parsedPredictions = tryParseJSON<Prediction[]>(
+              stringifiedPredictions
             );
 
-          // This is supposed to be an array of Predictions
-          // TODO: Maybe also do schema validation?
-          const parsedPredictions = tryParseJSON<Prediction[]>(
-            stringifiedPredictions
-          );
+            if (parsedPredictions === undefined) {
+              this.logger.error(
+                `Prediction is failed: Invalid JSON returned from predictFixtureResults()`
+              );
+              this.logger.debug(`Invalid JSON: ${stringifiedPredictions}`);
+              throw new PipeError(PipeResponseCodes.INTERNAL_SERVER_ERROR, {
+                message: "Prediction is failed",
+              });
+            }
 
-          if (parsedPredictions === undefined) {
-            this.logger.error(
-              `Prediction is failed: Invalid JSON returned from predictFixtureResults()`
-            );
-            this.logger.debug(`Invalid JSON: ${stringifiedPredictions}`);
+            // Cache the Predictions that we've just made
+            for (const prediction of parsedPredictions) {
+              this.cachePrediction(prediction.challengeId, prediction);
+              this.logger.info(
+                `Prediction for challenge ${prediction.challengeId} is cached`
+              );
+            }
+
+            return {
+              responseCode,
+
+              // Combine the predictions that has been made
+              // with the cached predictions
+              predictions: JSON.stringify([
+                ...parsedPredictions,
+                ...cachedPredictions,
+              ]),
+            };
+          } catch (err) {
+            const error = ensureError(err);
+            this.logger.error(`Prediction is failed: ${error.stack}`);
             throw new PipeError(PipeResponseCodes.INTERNAL_SERVER_ERROR, {
               message: "Prediction is failed",
             });
           }
-
-          // Cache the Predictions that we've just made
-          for (const prediction of parsedPredictions) {
-            this.cachePrediction(prediction.challengeId, prediction);
-            this.logger.info(
-              `Prediction for challenge ${prediction.challengeId} is cached`
-            );
-          }
-
-          return {
-            responseCode,
-
-            // Combine the predictions that has been made
-            // with the cached predictions
-            predictions: JSON.stringify([
-              ...parsedPredictions,
-              ...cachedPredictions,
-            ]),
-          };
         },
       });
 
