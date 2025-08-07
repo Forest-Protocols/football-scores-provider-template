@@ -396,6 +396,11 @@ class Program {
           limit: 100,
         })
         .then((res) => res.data);
+      provider.logger.debug(
+        `Agreements received from the Indexer while checking new Agreements: ${JSON.stringify(
+          allAgreements
+        )}`
+      );
 
       this.indexerIsNotHealthyLog = false;
 
@@ -426,6 +431,9 @@ class Program {
         `${ansis.yellow.bold("Found")} ${
           nonExistingAgreements.length
         } new Agreements for ${colorHex(provider.actorInfo.ownerAddr)}`
+      );
+      provider.logger.debug(
+        `New Agreements: ${JSON.stringify(nonExistingAgreements)}`
       );
 
       for (const agreement of nonExistingAgreements) {
@@ -480,6 +488,11 @@ class Program {
           limit: 100,
         })
         .then((res) => res.data);
+      provider.logger.debug(
+        `Agreements received from the Indexer while checking closed Agreements: ${JSON.stringify(
+          allAgreements
+        )}`
+      );
 
       this.indexerIsNotHealthyLog = false;
 
@@ -510,6 +523,9 @@ class Program {
         `${ansis.yellow.bold("Found")} ${
           nonClosedResources.length
         } Agreements to be closed by ${colorHex(provider.actorInfo.ownerAddr)}`
+      );
+      provider.logger.debug(
+        `Agreements to be closed: ${JSON.stringify(nonClosedResources)}`
       );
 
       for (const resource of nonClosedResources) {
