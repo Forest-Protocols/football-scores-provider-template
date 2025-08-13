@@ -14,7 +14,7 @@ export class MainProviderImplementation extends ScorePredictionServiceProvider {
   async predictFixtureResults(
     agreement: Agreement,
     resource: Resource,
-    challenges: string[]
+    challenges: string
   ): Promise<{ predictions: string[]; responseCode: PipeResponseCode }> {
     /**
      * TODO: Implement the logic of this protocol-specific action.
