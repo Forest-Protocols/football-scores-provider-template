@@ -1,4 +1,4 @@
-import { Agreement, PipeResponseCode } from "@forest-protocols/sdk";
+import { Agreement, PipeResponseCodeType } from "@forest-protocols/sdk";
 import {
   ScorePredictionServiceProvider,
   ScorePredictionResourceDetails,
@@ -15,7 +15,7 @@ export class MainProviderImplementation extends ScorePredictionServiceProvider {
     agreement: Agreement,
     resource: Resource,
     challenges: string
-  ): Promise<{ predictions: string[]; responseCode: PipeResponseCode }> {
+  ): Promise<{ predictions: string; responseCode: PipeResponseCodeType }> {
     /**
      * TODO: Implement the logic of this protocol-specific action.
      */
