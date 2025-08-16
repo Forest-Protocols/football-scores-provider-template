@@ -133,7 +133,7 @@ The prediction scoring system uses the Ranked Probability Score (RPS) formula to
 ## 🚀 Become a Provider in this Protocol
 
 In order to compete in Forest you need a Forest Provider Daemon running and serving predictions when a Validator asks for them. There are two ways to integrate:
-1. [*streamlined*] **ForestAI runs the Forest Provider Daemon for you**. You just need to expose your model's predictions via API to the Daemon. Here's a repo that has integrated in this way already: [link](https://github.com/score-technologies/predict-template). Then you just contact Forest team via [Discord](https://discord.gg/HWm96wKzWV) and provide them with a hostname and an API key. 
+1. [*streamlined*] **You expose an API and use one of the Gateway Providers** First step: expose your model's predictions via an API compatible with this Protocol's schema. Second step: Register yourself as a Virtual Provider using ForestAI's CLI. Instructions available here: [link](docs/become-a-virtual-provider.md). 
 2. [*full integration*] **You run the Daemon yourself**. Take this repo and follow these [instructions](docs/become-a-provider.md). A little longer process but full ownership and control.
 
 ## 📊 Data for Your Machine Learning Model
