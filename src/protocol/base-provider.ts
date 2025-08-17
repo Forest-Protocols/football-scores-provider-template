@@ -85,15 +85,21 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
   /**
    * Gets a prediction from the cache
    */
-  getCachedPrediction(challengeId: string) {
-    return this.predictionCache[challengeId] as Prediction | undefined;
+  getCachedPrediction(challengeId: string, providerId: number | string) {
+    return this.predictionCache[`${providerId}-${challengeId}`] as
+      | Prediction
+      | undefined;
   }
 
   /**
    * Caches a prediction
    */
-  cachePrediction(challengeId: string, prediction: Prediction) {
-    this.predictionCache[challengeId] = prediction;
+  cachePrediction(
+    challengeId: string,
+    prediction: Prediction,
+    providerId: number | string
+  ) {
+    this.predictionCache[`${providerId}-${challengeId}`] = prediction;
   }
 
   /**
@@ -172,7 +178,10 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
           const challengesToBeSend: Challenge[] = [];
 
           for (const challenge of challenges) {
-            const prediction = this.getCachedPrediction(challenge.challengeId);
+            const prediction = this.getCachedPrediction(
+              challenge.challengeId,
+              resource.providerId
+            );
             if (prediction) {
               this.logger.info(
                 `Prediction of challenge ${colorWord(
@@ -229,7 +238,11 @@ export abstract class ScorePredictionServiceProvider extends AbstractProvider<Sc
 
             // Cache the Predictions that we've just made
             for (const prediction of parsedPredictions) {
-              this.cachePrediction(prediction.challengeId, prediction);
+              this.cachePrediction(
+                prediction.challengeId,
+                prediction,
+                resource.providerId
+              );
               this.logger.info(
                 `Prediction for challenge ${prediction.challengeId} is cached`
               );
