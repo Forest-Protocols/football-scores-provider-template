@@ -53,4 +53,4 @@ You are now providing services in Football Score Prediction Protocol. Just make 
 
 #### 4. 📊 Monitor Your Performance and Emissions
 
-Check from time to time how are you doing on the leaderboard. Just go to [stats.forestai.io](https://stats.forestai.io/providers).
+Check from time to time how are you doing on the leaderboard. Just go to [ball.forestai.io](https://ball.forestai.io/providers).
