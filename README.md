@@ -62,34 +62,28 @@ More in-depth descriptions of the Tests:
 
 | Name             | Description                                                                                                                                                                                                                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Prediction Score | Providers must submit probability distributions (p.h, p.d, p.a) for each match outcome. The Ranked Probability Score (RPS) is calculated by comparing these probabilities against the actual outcome (home/draw/away). The final score is calculated as `Math.round((1 - rps) * 100)`, resulting in a score between 0 and 100. |
+| Prediction Score | Providers submit probability distributions for match outcomes. Score combines RPS (prediction accuracy) with EV (market efficiency), scaled by match difficulty. Formula: `(0.5 * Normalized_RPS * (1 + difficulty)) + Normalized_EV`. |
 | Response Time    | Maximum allowed time to generate predictions for a batch of fixtures. Must be under 12 seconds to ensure timely predictions.                                                                                                                                                                                                   |
 | Availability     | Service uptime requirement. Providers must maintain 99.9% availability to ensure reliable prediction service.                                                                                                                                                                                                                  |
 
 ## 🏆 Scoring System Details
 
-The prediction scoring system uses the Ranked Probability Score (RPS) formula to evaluate the quality of probability predictions:
+The scoring system combines Ranked Probability Score (RPS) with Expected Value (EV) to evaluate both prediction accuracy and market efficiency:
 
-1. For each match, providers submit three probabilities:
+1. **RPS Calculation**: Measures prediction accuracy against actual outcomes
+   - Normalized to 0-100: `Math.round((1 - rps) * 100)`
 
-   - p.h: Probability of home win
-   - p.d: Probability of draw
-   - p.a: Probability of away win
 
-2. The actual outcome is recorded as:
+2. **EV Calculation**: Measures market value of predictions
+   - `EV = (provider_probability_on_predicted_outcome * market_odds_on_this_outcome) - 1`
+   - Normalized if outcome matches prediction: `Math.round(min(EV/0.8, 1) * 100)`, else 0
 
-   - o: "home", "draw", or "away"
-
-3. The RPS is calculated and then transformed into a final score:
-
+3. **Final Score**: Combines both metrics with difficulty scaling
    ```javascript
-   finalScore = Math.round((1 - rps) * 100);
+   finalScore = (0.5 * Normalized_RPS * (1 + difficulty)) + Normalized_EV
    ```
 
-4. This results in a score between 0 and 100, where:
-   - Higher scores indicate better predictions
-   - A perfect prediction would score 100
-   - A completely incorrect prediction would score 0
+This system rewards both accurate predictions and market-beating insights, with higher difficulty matches providing greater scoring potential.
 
 ## 🔗 Communication Schemas
 
