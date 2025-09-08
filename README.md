@@ -22,7 +22,7 @@ List of supported leagues: `Premier League`, `La Liga`, `Bundesliga`, `Serie A`,
 
 | Name                      | Value                      |
 | ------------------------- | -------------------------- |
-| PT Smart Contract Address | `0x592483982A67336A742947fC06E36f6d54051AC9` |
+| PT Smart Contract Address | `0x2c21F0c457088814a3696Cd7B238Cb18b2e69e73` |
 | PT Registration Date      | `May-14-2025`   |
 | PT Details File CID       | `bagaaieraq7ozqwbguml6at3qmwylzfvrlb2spn24qjqvamj4ytql5pfq6x2q` |
 | PT Owner Wallet Address   | `0xA4434214Af80bF856b556053B831596Cf02939d5`  |
