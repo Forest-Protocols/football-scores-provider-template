@@ -46,7 +46,7 @@ This Protocol has the following configuration:
 | PT Owner Share of Emissions   | `30%`   | Smart Contract |
 | CID of the Details File       | `bagaaieraq7ozqwbguml6at3qmwylzfvrlb2spn24qjqvamj4ytql5pfq6x2q` | Smart Contract |
 
-You can always double-check the on-chain values e.g. [here](https://sepolia.basescan.org/address/0x592483982A67336A742947fC06E36f6d54051AC9)
+You can always double-check the on-chain values e.g. [here](https://sepolia.basescan.org/address/0x2c21f0c457088814a3696cd7b238cb18b2e69e73)
 
 ## ⏱️ Performance Requirements
 
