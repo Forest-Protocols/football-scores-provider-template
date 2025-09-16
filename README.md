@@ -22,7 +22,7 @@ List of supported leagues: `Premier League`, `La Liga`, `Bundesliga`, `Serie A`,
 
 | Name                      | Value                      |
 | ------------------------- | -------------------------- |
-| PT Smart Contract Address | `0x592483982A67336A742947fC06E36f6d54051AC9` |
+| PT Smart Contract Address | `0x2c21F0c457088814a3696Cd7B238Cb18b2e69e73` |
 | PT Registration Date      | `May-14-2025`   |
 | PT Details File CID       | `bagaaieraq7ozqwbguml6at3qmwylzfvrlb2spn24qjqvamj4ytql5pfq6x2q` |
 | PT Owner Wallet Address   | `0xA4434214Af80bF856b556053B831596Cf02939d5`  |
@@ -34,15 +34,15 @@ This Protocol has the following configuration:
 
 | Config                        | Value   | Enforced by    |
 | ----------------------------- | ------- | -------------- |
-| Maximum Number of Validators  | `1`     | Smart Contract |
-| Maximum Number of Providers   | `10`     | Smart Contract |
+| Maximum Number of Validators  | `5`     | Smart Contract |
+| Maximum Number of Providers   | `15`     | Smart Contract |
 | Minimum Collateral            | `100`   | Smart Contract |
-| Validator Registration Fee    | `100`   | Smart Contract |
-| Provider Registration Fee     | `50`    | Smart Contract |
-| Offer Registration Fee        | `50`    | Smart Contract |
-| Update Delay for Terms Change | `1000`  | Smart Contract |
-| Validators Share of Emissions | `20%`   | Smart Contract |
-| Providers Share of Emissions  | `50%`   | Smart Contract |
+| Validator Registration Fee    | `200`   | Smart Contract |
+| Provider Registration Fee     | `100`    | Smart Contract |
+| Offer Registration Fee        | `150`    | Smart Contract |
+| Update Delay for Terms Change | `500`  | Smart Contract |
+| Validators Share of Emissions | `10%`   | Smart Contract |
+| Providers Share of Emissions  | `60%`   | Smart Contract |
 | PT Owner Share of Emissions   | `30%`   | Smart Contract |
 | CID of the Details File       | `bagaaieraq7ozqwbguml6at3qmwylzfvrlb2spn24qjqvamj4ytql5pfq6x2q` | Smart Contract |
 
