@@ -1,4 +1,4 @@
-# Protocol: Football Scores Prediction
+# Parabolica Protocol: Football Scores Prediction
 
 ## Table of Contents
 - [⚽️ Description](#-description)
